@@ -1,4 +1,17 @@
 import styled from 'styled-components';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+
+export const ArrowLeft = styled(FaChevronLeft).attrs({
+  size: 20,
+})`
+  color: #333;
+`;
+
+export const ArrowRight = styled(FaChevronRight).attrs({
+  size: 20,
+})`
+  color: #333;
+`;
 
 export const Loading = styled.div`
   color: #fff;
@@ -119,5 +132,27 @@ export const Filter = styled.div`
     font-size: 14px;
     margin-left: 5px;
     color: #333;
+  }
+`;
+
+export const Navigation = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* border-radius: 4px; */
+    padding: 4px;
+
+    &[disabled] {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    margin: 0 5px;
   }
 `;

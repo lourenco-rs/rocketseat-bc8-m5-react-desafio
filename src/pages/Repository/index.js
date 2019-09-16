@@ -4,7 +4,15 @@ import PropTypes from 'prop-types';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Loading, Owner, IssueList, Filter } from './styles';
+import {
+  Loading,
+  Owner,
+  IssueList,
+  Filter,
+  Navigation,
+  ArrowLeft,
+  ArrowRight,
+} from './styles';
 
 export default class Repository extends Component {
   static propTypes = {
@@ -21,6 +29,7 @@ export default class Repository extends Component {
     issues: [],
     loading: true,
     filterState: 'open',
+    page: 1,
   };
 
   async componentDidMount() {
@@ -55,19 +64,31 @@ export default class Repository extends Component {
     }
   }
 
-  getIssues = async () => {
+  getIssues = async (page = 1) => {
     const { filterState, repoName } = this.state;
 
     const { data } = await api.get(`/repos/${repoName}/issues`, {
       params: {
         state: filterState,
         per_page: 5,
+        page,
       },
     });
 
     this.setState({
       issues: data,
+      page,
     });
+  };
+
+  priorPage = () => {
+    const { page } = this.state;
+    this.getIssues(page - 1);
+  };
+
+  nextPage = () => {
+    const { page } = this.state;
+    this.getIssues(page + 1);
   };
 
   handleChange = e => {
@@ -75,7 +96,7 @@ export default class Repository extends Component {
   };
 
   render() {
-    const { repository, issues, loading, filterState } = this.state;
+    const { repository, issues, loading, filterState, page } = this.state;
 
     if (loading) {
       return <Loading>Carregando</Loading>;
@@ -115,6 +136,19 @@ export default class Repository extends Component {
             </li>
           ))}
         </IssueList>
+
+        <Navigation>
+          <button type="button" disabled={page === 1} onClick={this.priorPage}>
+            <ArrowLeft />
+          </button>
+          <button
+            type="button"
+            disabled={issues.length < 5}
+            onClick={this.nextPage}
+          >
+            <ArrowRight />
+          </button>
+        </Navigation>
       </Container>
     );
   }
