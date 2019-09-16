@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import api from '../../services/api';
 
 import Container from '../../components/Container';
-import { Loading, Owner, IssueList } from './styles';
+import { Loading, Owner, IssueList, Filter } from './styles';
 
 export default class Repository extends Component {
   static propTypes = {
@@ -16,21 +16,26 @@ export default class Repository extends Component {
   };
 
   state = {
+    repoName: '',
     repository: {},
     issues: [],
     loading: true,
+    filterState: 'open',
   };
 
   async componentDidMount() {
     const { match } = this.props;
 
     const repoName = decodeURIComponent(match.params.repository);
+    const { filterState } = this.state;
 
     const [repository, issues] = await Promise.all([
       api.get(`/repos/${repoName}`),
       api.get(`/repos/${repoName}/issues`, {
-        state: 'open',
-        per_page: 5,
+        params: {
+          state: filterState,
+          per_page: 5,
+        },
       }),
     ]);
 
@@ -38,11 +43,39 @@ export default class Repository extends Component {
       repository: repository.data,
       issues: issues.data,
       loading: false,
+      repoName,
     });
   }
 
+  componentDidUpdate(_, prevState) {
+    const { filterState } = this.state;
+
+    if (filterState !== prevState.filterState) {
+      this.getIssues();
+    }
+  }
+
+  getIssues = async () => {
+    const { filterState, repoName } = this.state;
+
+    const { data } = await api.get(`/repos/${repoName}/issues`, {
+      params: {
+        state: filterState,
+        per_page: 5,
+      },
+    });
+
+    this.setState({
+      issues: data,
+    });
+  };
+
+  handleChange = e => {
+    this.setState({ filterState: e.target.value });
+  };
+
   render() {
-    const { repository, issues, loading } = this.state;
+    const { repository, issues, loading, filterState } = this.state;
 
     if (loading) {
       return <Loading>Carregando</Loading>;
@@ -56,6 +89,15 @@ export default class Repository extends Component {
           <h1>{repository.name}</h1>
           <p>{repository.description}</p>
         </Owner>
+
+        <Filter>
+          <label>Issues:</label>
+          <select value={filterState} onChange={this.handleChange}>
+            <option value="open">Abertas</option>
+            <option value="closed">Fechadas</option>
+            <option value="all">Todas</option>
+          </select>
+        </Filter>
 
         <IssueList>
           {issues.map(issue => (
